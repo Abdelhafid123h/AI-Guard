@@ -1,0 +1,16 @@
+{
+    "examples": [
+        {
+            "id": 1,
+            "credit_card": "5555 5555 5555 4444",
+            "numero_carte_bancaire": "4111 1111 1111 1111",
+            "iban": "FR14 2004 1010 0505 0001 3M02 606",
+            "rib": "FR76 3000 6000 0112 3456 7890 189",
+            "bank_account": "20041 01005 05000013M02 60",
+            "numero_compte_bancaire": "30006 00001 12345678901 89",
+            "codes_securite": "123",
+            "cvv": "456",
+            "informations_paiement": "Visa **** 4444 exp. 12/25"
+        }
+    ]
+}

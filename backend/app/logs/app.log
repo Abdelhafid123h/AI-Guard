@@ -1,0 +1,202 @@
+[2025-07-30 10:00:00] SystÃ¨me dÃ©marrÃ©
+[2025-07-30 10:01:00] Exemple de log : dÃ©tection PII rÃ©ussie
+[2025-07-30 10:02:00] Exemple de log : requÃªte LLM envoyÃ©e
+2025-07-30 15:40:11 WARNING model_to_presidio_entity_mapping is missing from configuration, using default
+2025-07-30 15:40:11 WARNING low_score_entity_names is missing from configuration, using default
+2025-07-30 15:40:11 WARNING labels_to_ignore is missing from configuration, using default
+2025-07-30 15:40:11 INFO Created NLP engine: spacy. Loaded models: ['fr']
+2025-07-30 15:40:11 INFO registry not provided, creating default.
+2025-07-30 15:40:11 INFO Loaded recognizer: CreditCardRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: CreditCardRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: CreditCardRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: CreditCardRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: UsBankRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: UsLicenseRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: UsItinRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: UsPassportRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: UsSsnRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: NhsRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: EsNifRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: EsNieRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: ItDriverLicenseRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: ItFiscalCodeRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: ItVatCodeRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: ItIdentityCardRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: ItPassportRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: PlPeselRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: CryptoRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: DateRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: EmailRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: IbanRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: IpRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: MedicalLicenseRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: PhoneRecognizer
+2025-07-30 15:40:11 INFO Loaded recognizer: UrlRecognizer
+2025-07-30 15:40:11 WARNING Recognizer not added to registry because language is not supported by registry - CreditCardRecognizer supported languages: es, registry supported languages: en
+2025-07-30 15:40:11 WARNING Recognizer not added to registry because language is not supported by registry - CreditCardRecognizer supported languages: it, registry supported languages: en
+2025-07-30 15:40:11 WARNING Recognizer not added to registry because language is not supported by registry - CreditCardRecognizer supported languages: pl, registry supported languages: en
+2025-07-30 15:40:11 WARNING Recognizer not added to registry because language is not supported by registry - EsNifRecognizer supported languages: es, registry supported languages: en
+2025-07-30 15:40:11 WARNING Recognizer not added to registry because language is not supported by registry - EsNieRecognizer supported languages: es, registry supported languages: en
+2025-07-30 15:40:11 WARNING Recognizer not added to registry because language is not supported by registry - ItDriverLicenseRecognizer supported languages: it, registry supported languages: en
+2025-07-30 15:40:11 WARNING Recognizer not added to registry because language is not supported by registry - ItFiscalCodeRecognizer supported languages: it, registry supported languages: en
+2025-07-30 15:40:11 WARNING Recognizer not added to registry because language is not supported by registry - ItVatCodeRecognizer supported languages: it, registry supported languages: en
+2025-07-30 15:40:11 WARNING Recognizer not added to registry because language is not supported by registry - ItIdentityCardRecognizer supported languages: it, registry supported languages: en
+2025-07-30 15:40:11 WARNING Recognizer not added to registry because language is not supported by registry - ItPassportRecognizer supported languages: it, registry supported languages: en
+2025-07-30 15:40:11 WARNING Recognizer not added to registry because language is not supported by registry - PlPeselRecognizer supported languages: pl, registry supported languages: en
+2025-07-30 15:40:11 INFO Loaded recognizer: SpacyRecognizer
+2025-07-30 15:40:54 INFO Début du traitement du texte (guard_type=TypeA)
+2025-07-30 15:40:56 INFO Fetching all recognizers for language fr
+2025-07-30 15:40:56 WARNING Entity MISC is not mapped to a Presidio entity, but keeping anyway. Add to `NerModelConfiguration.labels_to_ignore` to remove.
+2025-07-30 15:40:56 INFO Entités détectées : [('Sophie Martin', 'name'), ('15/03/1985', 'birth_date'), ('Paris', 'address'), ('France', 'address'), ('1 85 03 75 123 456 78', 'social_security'), ('Contactez', 'address'), ('sophie.martin@email.com', 'company'), ('+33 6 45 67', 'phone'), ('89 12', 'phone')]
+2025-07-30 15:40:56 INFO Entités filtrées pour TypeA : [('Sophie Martin', 'name'), ('15/03/1985', 'birth_date'), ('1 85 03 75 123 456 78', 'social_security'), ('+33 6 45 67', 'phone'), ('89 12', 'phone')]
+2025-07-30 15:40:56 INFO Types autorisés (depuis JSON) : ['name', 'phone', 'email', 'birth_date', 'birth_place', 'social_security', 'id_card', 'passeport', 'driving_license']
+2025-07-30 15:40:56 INFO Texte masqué généré : Bonjour, je suis <name:TOKEN_0151bb47ec817ae1>. né le <birth_date:TOKEN_540c319db0bf51d5> à Paris, France. Mon numéro de sécurité sociale est <social_security:TOKEN_a8c37bfd95bf4643>. Contactez-moi à sophie.martin@email.com. ou au <phone:TOKEN_f5e01a21c76e5bd0> <phone:TOKEN_5bf15afa0f217cd9>.
+2025-07-30 15:40:57 INFO Réponse LLM reçue : Bonjour, comment puis-je vous aider aujourd'hui ?
+2025-07-30 15:40:57 INFO Texte démasqué généré : Bonjour, comment puis-je vous aider aujourd'hui ?
+2025-07-30 15:54:04 WARNING model_to_presidio_entity_mapping is missing from configuration, using default
+2025-07-30 15:54:04 WARNING low_score_entity_names is missing from configuration, using default
+2025-07-30 15:54:04 WARNING labels_to_ignore is missing from configuration, using default
+2025-07-30 15:54:05 INFO Created NLP engine: spacy. Loaded models: ['fr']
+2025-07-30 15:54:05 INFO registry not provided, creating default.
+2025-07-30 15:54:05 INFO Loaded recognizer: CreditCardRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: CreditCardRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: CreditCardRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: CreditCardRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: UsBankRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: UsLicenseRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: UsItinRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: UsPassportRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: UsSsnRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: NhsRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: EsNifRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: EsNieRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: ItDriverLicenseRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: ItFiscalCodeRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: ItVatCodeRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: ItIdentityCardRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: ItPassportRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: PlPeselRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: CryptoRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: DateRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: EmailRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: IbanRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: IpRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: MedicalLicenseRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: PhoneRecognizer
+2025-07-30 15:54:05 INFO Loaded recognizer: UrlRecognizer
+2025-07-30 15:54:05 WARNING Recognizer not added to registry because language is not supported by registry - CreditCardRecognizer supported languages: es, registry supported languages: en
+2025-07-30 15:54:05 WARNING Recognizer not added to registry because language is not supported by registry - CreditCardRecognizer supported languages: it, registry supported languages: en
+2025-07-30 15:54:05 WARNING Recognizer not added to registry because language is not supported by registry - CreditCardRecognizer supported languages: pl, registry supported languages: en
+2025-07-30 15:54:05 WARNING Recognizer not added to registry because language is not supported by registry - EsNifRecognizer supported languages: es, registry supported languages: en
+2025-07-30 15:54:05 WARNING Recognizer not added to registry because language is not supported by registry - EsNieRecognizer supported languages: es, registry supported languages: en
+2025-07-30 15:54:05 WARNING Recognizer not added to registry because language is not supported by registry - ItDriverLicenseRecognizer supported languages: it, registry supported languages: en
+2025-07-30 15:54:05 WARNING Recognizer not added to registry because language is not supported by registry - ItFiscalCodeRecognizer supported languages: it, registry supported languages: en
+2025-07-30 15:54:05 WARNING Recognizer not added to registry because language is not supported by registry - ItVatCodeRecognizer supported languages: it, registry supported languages: en
+2025-07-30 15:54:05 WARNING Recognizer not added to registry because language is not supported by registry - ItIdentityCardRecognizer supported languages: it, registry supported languages: en
+2025-07-30 15:54:05 WARNING Recognizer not added to registry because language is not supported by registry - ItPassportRecognizer supported languages: it, registry supported languages: en
+2025-07-30 15:54:05 WARNING Recognizer not added to registry because language is not supported by registry - PlPeselRecognizer supported languages: pl, registry supported languages: en
+2025-07-30 15:54:05 INFO Loaded recognizer: SpacyRecognizer
+2025-07-30 15:54:40 WARNING model_to_presidio_entity_mapping is missing from configuration, using default
+2025-07-30 15:54:40 WARNING low_score_entity_names is missing from configuration, using default
+2025-07-30 15:54:40 WARNING labels_to_ignore is missing from configuration, using default
+2025-07-30 15:54:41 INFO Created NLP engine: spacy. Loaded models: ['fr']
+2025-07-30 15:54:41 INFO registry not provided, creating default.
+2025-07-30 15:54:41 INFO Loaded recognizer: CreditCardRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: CreditCardRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: CreditCardRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: CreditCardRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: UsBankRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: UsLicenseRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: UsItinRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: UsPassportRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: UsSsnRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: NhsRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: EsNifRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: EsNieRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: ItDriverLicenseRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: ItFiscalCodeRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: ItVatCodeRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: ItIdentityCardRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: ItPassportRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: PlPeselRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: CryptoRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: DateRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: EmailRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: IbanRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: IpRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: MedicalLicenseRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: PhoneRecognizer
+2025-07-30 15:54:41 INFO Loaded recognizer: UrlRecognizer
+2025-07-30 15:54:41 WARNING Recognizer not added to registry because language is not supported by registry - CreditCardRecognizer supported languages: es, registry supported languages: en
+2025-07-30 15:54:41 WARNING Recognizer not added to registry because language is not supported by registry - CreditCardRecognizer supported languages: it, registry supported languages: en
+2025-07-30 15:54:41 WARNING Recognizer not added to registry because language is not supported by registry - CreditCardRecognizer supported languages: pl, registry supported languages: en
+2025-07-30 15:54:41 WARNING Recognizer not added to registry because language is not supported by registry - EsNifRecognizer supported languages: es, registry supported languages: en
+2025-07-30 15:54:41 WARNING Recognizer not added to registry because language is not supported by registry - EsNieRecognizer supported languages: es, registry supported languages: en
+2025-07-30 15:54:41 WARNING Recognizer not added to registry because language is not supported by registry - ItDriverLicenseRecognizer supported languages: it, registry supported languages: en
+2025-07-30 15:54:41 WARNING Recognizer not added to registry because language is not supported by registry - ItFiscalCodeRecognizer supported languages: it, registry supported languages: en
+2025-07-30 15:54:41 WARNING Recognizer not added to registry because language is not supported by registry - ItVatCodeRecognizer supported languages: it, registry supported languages: en
+2025-07-30 15:54:41 WARNING Recognizer not added to registry because language is not supported by registry - ItIdentityCardRecognizer supported languages: it, registry supported languages: en
+2025-07-30 15:54:41 WARNING Recognizer not added to registry because language is not supported by registry - ItPassportRecognizer supported languages: it, registry supported languages: en
+2025-07-30 15:54:41 WARNING Recognizer not added to registry because language is not supported by registry - PlPeselRecognizer supported languages: pl, registry supported languages: en
+2025-07-30 15:54:41 INFO Loaded recognizer: SpacyRecognizer
+2025-07-30 15:56:36 WARNING model_to_presidio_entity_mapping is missing from configuration, using default
+2025-07-30 15:56:36 WARNING low_score_entity_names is missing from configuration, using default
+2025-07-30 15:56:36 WARNING labels_to_ignore is missing from configuration, using default
+2025-07-30 15:56:37 INFO Created NLP engine: spacy. Loaded models: ['fr']
+2025-07-30 15:56:37 INFO registry not provided, creating default.
+2025-07-30 15:56:37 INFO Loaded recognizer: CreditCardRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: CreditCardRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: CreditCardRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: CreditCardRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: UsBankRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: UsLicenseRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: UsItinRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: UsPassportRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: UsSsnRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: NhsRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: EsNifRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: EsNieRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: ItDriverLicenseRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: ItFiscalCodeRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: ItVatCodeRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: ItIdentityCardRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: ItPassportRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: PlPeselRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: CryptoRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: DateRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: EmailRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: IbanRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: IpRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: MedicalLicenseRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: PhoneRecognizer
+2025-07-30 15:56:37 INFO Loaded recognizer: UrlRecognizer
+2025-07-30 15:56:37 WARNING Recognizer not added to registry because language is not supported by registry - CreditCardRecognizer supported languages: es, registry supported languages: en
+2025-07-30 15:56:37 WARNING Recognizer not added to registry because language is not supported by registry - CreditCardRecognizer supported languages: it, registry supported languages: en
+2025-07-30 15:56:37 WARNING Recognizer not added to registry because language is not supported by registry - CreditCardRecognizer supported languages: pl, registry supported languages: en
+2025-07-30 15:56:37 WARNING Recognizer not added to registry because language is not supported by registry - EsNifRecognizer supported languages: es, registry supported languages: en
+2025-07-30 15:56:37 WARNING Recognizer not added to registry because language is not supported by registry - EsNieRecognizer supported languages: es, registry supported languages: en
+2025-07-30 15:56:37 WARNING Recognizer not added to registry because language is not supported by registry - ItDriverLicenseRecognizer supported languages: it, registry supported languages: en
+2025-07-30 15:56:37 WARNING Recognizer not added to registry because language is not supported by registry - ItFiscalCodeRecognizer supported languages: it, registry supported languages: en
+2025-07-30 15:56:37 WARNING Recognizer not added to registry because language is not supported by registry - ItVatCodeRecognizer supported languages: it, registry supported languages: en
+2025-07-30 15:56:37 WARNING Recognizer not added to registry because language is not supported by registry - ItIdentityCardRecognizer supported languages: it, registry supported languages: en
+2025-07-30 15:56:37 WARNING Recognizer not added to registry because language is not supported by registry - ItPassportRecognizer supported languages: it, registry supported languages: en
+2025-07-30 15:56:37 WARNING Recognizer not added to registry because language is not supported by registry - PlPeselRecognizer supported languages: pl, registry supported languages: en
+2025-07-30 15:56:37 INFO Loaded recognizer: SpacyRecognizer
+2025-07-30 15:56:53 INFO Début du traitement du texte (guard_type=TypeA)
+2025-07-30 15:56:54 INFO Fetching all recognizers for language fr
+2025-07-30 15:56:54 WARNING Entity MISC is not mapped to a Presidio entity, but keeping anyway. Add to `NerModelConfiguration.labels_to_ignore` to remove.
+2025-07-30 15:56:54 INFO Entités détectées : [('Sophie Martin', 'name'), ('15/03/1985', 'birth_date'), ('Paris', 'address'), ('France', 'address'), ('1 85 03 75 123 456 78', 'social_security'), ('Contactez', 'address'), ('sophie.martin@email.com', 'company'), ('+33 6 45 67', 'phone'), ('89 12', 'phone')]
+2025-07-30 15:56:54 INFO Entités filtrées pour TypeA : [('Sophie Martin', 'name'), ('15/03/1985', 'birth_date'), ('1 85 03 75 123 456 78', 'social_security'), ('+33 6 45 67', 'phone'), ('89 12', 'phone')]
+2025-07-30 15:56:54 INFO Types autorisés (depuis JSON) : ['name', 'phone', 'email', 'birth_date', 'birth_place', 'social_security', 'id_card', 'passeport', 'driving_license']
+2025-07-30 15:56:54 INFO Texte masqué généré : Bonjour, je suis <name:TOKEN_0151bb47ec817ae1>. né le <birth_date:TOKEN_540c319db0bf51d5> à Paris, France. Mon numéro de sécurité sociale est <social_security:TOKEN_a8c37bfd95bf4643>. Contactez-moi à sophie.martin@email.com. ou au <phone:TOKEN_f5e01a21c76e5bd0> <phone:TOKEN_5bf15afa0f217cd9>.
+2025-07-30 15:56:55 INFO Réponse LLM reçue : Bonjour, comment puis-je vous aider aujourd'hui?
+2025-07-30 15:56:55 INFO Texte démasqué généré : Bonjour, comment puis-je vous aider aujourd'hui?
+2025-07-30 15:57:05 INFO Début du traitement du texte (guard_type=TypeA)
+2025-07-30 15:57:06 INFO Fetching all recognizers for language fr
+2025-07-30 15:57:06 WARNING Entity MISC is not mapped to a Presidio entity, but keeping anyway. Add to `NerModelConfiguration.labels_to_ignore` to remove.
+2025-07-30 15:57:06 INFO Entités détectées : [('Sophie Martin', 'name'), ('15/03/1985', 'birth_date'), ('Paris', 'address'), ('France', 'address'), ('1 85 03 75 123 456 78', 'social_security'), ('Contactez', 'address'), ('sophie.martin@email.com', 'company'), ('+33 6 45 67', 'phone'), ('89 12', 'phone')]
+2025-07-30 15:57:06 INFO Entités filtrées pour TypeA : [('Sophie Martin', 'name'), ('15/03/1985', 'birth_date'), ('1 85 03 75 123 456 78', 'social_security'), ('+33 6 45 67', 'phone'), ('89 12', 'phone')]
+2025-07-30 15:57:06 INFO Types autorisés (depuis JSON) : ['name', 'phone', 'email', 'birth_date', 'birth_place', 'social_security', 'id_card', 'passeport', 'driving_license']
+2025-07-30 15:57:06 INFO Texte masqué généré : Bonjour, je suis <name:TOKEN_0151bb47ec817ae1>. né le <birth_date:TOKEN_540c319db0bf51d5> à Paris, France. Mon numéro de sécurité sociale est <social_security:TOKEN_a8c37bfd95bf4643>. Contactez-moi à sophie.martin@email.com. ou au <phone:TOKEN_f5e01a21c76e5bd0> <phone:TOKEN_5bf15afa0f217cd9>. quel est son nom
+2025-07-30 15:57:07 INFO Réponse LLM reçue : Le nom est <name:TOKEN_0151bb47ec817ae1>.
+2025-07-30 15:57:07 INFO Texte démasqué généré : Le nom est Sophie Martin.
