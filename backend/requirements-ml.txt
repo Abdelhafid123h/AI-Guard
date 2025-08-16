@@ -1,0 +1,5 @@
+# Optional heavy ML dependencies. Install only when advanced transformers pipeline required.
+transformers==4.53.2
+torch==2.7.1
+# tokenizers already comes with transformers but pin if needed
+# tokenizers==0.21.2

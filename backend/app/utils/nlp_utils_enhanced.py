@@ -1,5 +1,15 @@
-from transformers import pipeline
-import spacy
+try:
+    from transformers import pipeline
+    TRANSFORMERS_AVAILABLE = True
+except ImportError:
+    TRANSFORMERS_AVAILABLE = False
+    
+try:
+    import spacy
+    SPACY_AVAILABLE = True
+except ImportError:
+    SPACY_AVAILABLE = False
+    
 import os
 
 class NLPModels:
@@ -7,55 +17,69 @@ class NLPModels:
         print("🔄 Initialisation des modèles NLP...")
         
         # 1. Modèle spaCy français
-        try:
-            self.spacy_model = spacy.load("fr_core_news_sm")
-            print("✅ Modèle spaCy français chargé")
-        except OSError:
-            print("⚠️ Modèle spaCy français non trouvé. Installation requise : python -m spacy download fr_core_news_sm")
+        if SPACY_AVAILABLE:
+            try:
+                self.spacy_model = spacy.load("fr_core_news_sm")
+                print("✅ Modèle spaCy français chargé")
+            except OSError:
+                print("⚠️ Modèle spaCy français non trouvé. Installation requise : python -m spacy download fr_core_news_sm")
+                self.spacy_model = None
+        else:
+            print("⚠️ spaCy non disponible")
             self.spacy_model = None
         
         # 2. Modèle BERT original (multilingue)
-        try:
-            self.bert_model = pipeline(
-                "ner",
-                model="dslim/bert-base-NER",
-                aggregation_strategy="simple",
-                device=-1  # CPU
-            )
-            print("✅ Modèle BERT multilingue chargé")
-        except Exception as e:
-            print(f"⚠️ Erreur chargement BERT : {e}")
+        if TRANSFORMERS_AVAILABLE:
+            try:
+                self.bert_model = pipeline(
+                    "ner",
+                    model="dslim/bert-base-NER",
+                    aggregation_strategy="simple",
+                    device=-1  # CPU
+                )
+                print("✅ Modèle BERT multilingue chargé")
+            except Exception as e:
+                print(f"⚠️ Erreur chargement BERT : {e}")
+                self.bert_model = None
+        else:
+            print("⚠️ transformers non disponible")
             self.bert_model = None
         
         # 3. NOUVEAU : Modèle CamemBERT français spécialisé
-        try:
-            print("📦 Tentative de chargement de CamemBERT...")
-            self.camembert_model = pipeline(
-                "ner",
-                model="Jean-Baptiste/camembert-ner",
-                aggregation_strategy="simple",
-                device=-1,  # CPU
-                return_all_scores=False,
-                trust_remote_code=True
-            )
-            print("✅ Modèle CamemBERT français chargé")
-        except Exception as e:
-            print(f"⚠️ CamemBERT non disponible : {str(e)[:100]}...")
+        if TRANSFORMERS_AVAILABLE:
+            try:
+                print("📦 Tentative de chargement de CamemBERT...")
+                self.camembert_model = pipeline(
+                    "ner",
+                    model="Jean-Baptiste/camembert-ner",
+                    aggregation_strategy="simple",
+                    device=-1,  # CPU
+                    return_all_scores=False,
+                    trust_remote_code=True
+                )
+                print("✅ Modèle CamemBERT français chargé")
+            except Exception as e:
+                print(f"⚠️ CamemBERT non disponible : {str(e)[:100]}...")
+                self.camembert_model = None
+        else:
             self.camembert_model = None
         
         # 4. NOUVEAU : Modèle français alternatif (plus léger)
-        try:
-            print("📦 Tentative de chargement du modèle français alternatif...")
-            # Utilisons un modèle plus simple et fiable
-            self.french_model = pipeline(
-                "ner",
-                model="dbmdz/bert-large-cased-finetuned-conll03-english",  # Modèle plus stable
-                aggregation_strategy="simple",
-                device=-1
-            )
-            print("✅ Modèle français alternatif chargé")
-        except Exception as e:
-            print(f"⚠️ Modèle alternatif non disponible : {str(e)[:100]}...")
+        if TRANSFORMERS_AVAILABLE:
+            try:
+                print("📦 Tentative de chargement du modèle français alternatif...")
+                # Utilisons un modèle plus simple et fiable
+                self.french_model = pipeline(
+                    "ner",
+                    model="dbmdz/bert-large-cased-finetuned-conll03-english",  # Modèle plus stable
+                    aggregation_strategy="simple",
+                    device=-1
+                )
+                print("✅ Modèle français alternatif chargé")
+            except Exception as e:
+                print(f"⚠️ Modèle alternatif non disponible : {str(e)[:100]}...")
+                self.french_model = None
+        else:
             self.french_model = None
             
         print("🎯 Initialisation des modèles terminée")

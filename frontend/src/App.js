@@ -3,13 +3,15 @@ import axios from 'axios';
 import PIIProtectionForm from './components/PIIProtectionForm';
 import ResultDisplay from './components/ResultDisplay';
 import GuardTypeInfo from './components/GuardTypeInfo';
-import LogsPage from './components/LogsPage';
+import GuardTypeManager from './components/GuardTypeManager';
+import HistoryPage from './components/HistoryPage';
 import './App.css';
 
 function App() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('protection'); // 'protection', 'management', 'history'
 
   const handleSubmit = async (formData) => {
     setLoading(true);
@@ -31,24 +33,10 @@ function App() {
     }
   };
 
-  const [showLogs, setShowLogs] = useState(false);
-
-  return (
-    <div className="App">
-      <div className="container">
-        <header className="header">
-          <h1>🛡️ IA Guards</h1>
-          <p>Protection des données personnelles pour l'Intelligence Artificielle</p>
-        </header>
-        <button onClick={() => setShowLogs((v) => !v)} style={{ marginBottom: '1rem', float: 'right' }}>
-          {showLogs ? 'Masquer les logs' : 'Afficher les logs'}
-        </button>
-        {showLogs ? (
-          <div className="card">
-            {/* Affichage des logs */}
-            <LogsPage />
-          </div>
-        ) : (
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'protection':
+        return (
           <>
             <GuardTypeInfo />
             <div className="card">
@@ -76,7 +64,59 @@ function App() {
               </div>
             )}
           </>
-        )}
+        );
+      
+      case 'management':
+        return (
+          <div className="card">
+            <GuardTypeManager />
+          </div>
+        );
+      
+      case 'history':
+        return (
+          <div className="card">
+            <HistoryPage />
+          </div>
+        );
+      
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="App">
+      <div className="container">
+        <header className="header">
+          <h1>🛡️ IA Guards</h1>
+          <p>Protection des données personnelles pour l'Intelligence Artificielle</p>
+        </header>
+
+        {/* Navigation par onglets */}
+        <div className="nav-tabs">
+          <button
+            className={`nav-tab ${activeTab === 'protection' ? 'active' : ''}`}
+            onClick={() => setActiveTab('protection')}
+          >
+            🛡️ Protection PII
+          </button>
+          <button
+            className={`nav-tab ${activeTab === 'management' ? 'active' : ''}`}
+            onClick={() => setActiveTab('management')}
+          >
+            🔧 Gestion des Types
+          </button>
+          <button
+            className={`nav-tab ${activeTab === 'history' ? 'active' : ''}`}
+            onClick={() => setActiveTab('history')}
+          >
+            📊 Historique
+          </button>
+        </div>
+
+        {/* Contenu selon l'onglet actif */}
+        {renderTabContent()}
       </div>
     </div>
   );

@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const PIIProtectionForm = ({ onSubmit, loading }) => {
+  const [guardTypes, setGuardTypes] = useState([]); // 🆕 Types dynamiques
   const [formData, setFormData] = useState({
     text: '',
-    guardType: 'TypeA',
+    guardType: '',  // Sera défini après chargement des types
     llmProvider: 'openai'
   });
 
@@ -14,19 +15,47 @@ const PIIProtectionForm = ({ onSubmit, loading }) => {
     InfoPerso: "Contactez-moi à jean.dupont@example.com ou au +33 6 12 34 56 78. J'habite au 123 Rue de la République, 75001 Paris."
   });
 
+  // 🆕 NOUVEAU : Charger les types de protection depuis l'API
+  useEffect(() => {
+    const loadGuardTypes = async () => {
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/api/config/guard-types');
+        const types = response.data.guard_types || [];
+        setGuardTypes(types);
+        
+        // Définir le premier type comme défaut si aucun n'est sélectionné
+        if (types.length > 0 && !formData.guardType) {
+          setFormData(prev => ({ ...prev, guardType: types[0].name }));
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des types de protection:', error);
+        // Fallback vers types statiques
+        setGuardTypes([
+          { name: 'TypeA', display_name: 'TypeA - Données Personnelles Identifiantes' },
+          { name: 'TypeB', display_name: 'TypeB - Données Financières' },
+          { name: 'InfoPerso', display_name: 'InfoPerso - Données de Contact' }
+        ]);
+        setFormData(prev => ({ ...prev, guardType: 'TypeA' }));
+      }
+    };
+
+    loadGuardTypes();
+  }, []);
+
   // 🆕 NOUVEAU : Charger les exemples depuis le backend (JSON)
   useEffect(() => {
+    if (guardTypes.length === 0) return; // Attendre que les types soient chargés
+    
     const loadExamples = async () => {
       try {
-        const types = ['TypeA', 'TypeB', 'InfoPerso'];
         const newExamples = {};
         
-        for (const type of types) {
+        for (const guardType of guardTypes) {
           try {
-            const response = await axios.get(`http://127.0.0.1:8000/examples/${type}`);
-            newExamples[type] = response.data.example_text;
+            const response = await axios.get(`http://127.0.0.1:8000/examples/${guardType.name}`);
+            newExamples[guardType.name] = response.data.example_text;
           } catch (error) {
-            console.warn(`Impossible de charger l'exemple pour ${type}, utilisation valeur par défaut`);
+            console.warn(`Impossible de charger l'exemple pour ${guardType.name}, utilisation valeur par défaut`);
             // Garder la valeur par défaut si erreur
           }
         }
@@ -40,7 +69,7 @@ const PIIProtectionForm = ({ onSubmit, loading }) => {
     };
 
     loadExamples();
-  }, []);
+  }, [guardTypes]); // Dépendance sur guardTypes au lieu de []
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -78,9 +107,15 @@ const PIIProtectionForm = ({ onSubmit, loading }) => {
           onChange={handleChange}
           required
         >
-          <option value="TypeA">TypeA - Données Personnelles Identifiantes</option>
-          <option value="TypeB">TypeB - Données Financières</option>
-          <option value="InfoPerso">InfoPerso - Données de Contact</option>
+          {guardTypes.length === 0 ? (
+            <option value="">Chargement des types...</option>
+          ) : (
+            guardTypes.map(type => (
+              <option key={type.name} value={type.name}>
+                {type.display_name || type.name}
+              </option>
+            ))
+          )}
         </select>
       </div>
 

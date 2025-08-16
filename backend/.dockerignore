@@ -1,0 +1,47 @@
+# Git
+.git/
+.gitignore
+
+# Documentation
+README*.md
+*.md
+docs/
+
+# Environnements Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+
+# Logs
+*.log
+logs/
+
+# Base de données locale (sera gérée par Docker)
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Docker
+Dockerfile
+.dockerignore
