@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 # Correction du chemin pour éviter le double 'backend'
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 LOG_PATH = os.path.join(BASE_DIR, "logs", "app.log")
@@ -15,18 +16,56 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from .services.guard_service import GuardService
-from .utils.config_loader import config_loader
 from .utils.dynamic_config_loader import dynamic_config_loader
 from .api.config_api import config_router
-from .api.guard_types_crud_api import router as guard_types_router
 from typing import Dict, List
-from .database.db_manager import db_manager, DB_MANAGER_VERSION
+# Import db_manager and try to import DB_MANAGER_VERSION with a safe fallback
+try:
+    from .database.db_manager import db_manager, DB_MANAGER_VERSION  # type: ignore
+except Exception:
+    from .database.db_manager import db_manager  # type: ignore
+    DB_MANAGER_VERSION = os.getenv("DB_MANAGER_VERSION", "unknown")
+from .init_seed_defaults import seed_defaults
 
 app = FastAPI(
     title="AI-Guards API",
     description="API de protection des données personnelles avec configuration dynamique",
     version="2.0.0"
 )
+
+# Seed par défaut au démarrage (avec quelques retries pour MySQL)
+@app.on_event("startup")
+def _startup_seed_defaults():
+    retries = int(os.getenv("SEED_STARTUP_RETRIES", "20"))  # ~40s total par défaut
+    delay = float(os.getenv("SEED_STARTUP_DELAY", "2.0"))
+    for i in range(retries):
+        try:
+            # Ping DB légère
+            try:
+                with db_manager.get_connection() as conn:
+                    cur = conn.cursor()
+                    if db_manager.engine == 'mysql':
+                        cur.execute("SELECT 1")
+                    else:
+                        conn.execute("SELECT 1")
+            except Exception as e:
+                logging.getLogger(__name__).warning(f"DB pas prête (tentative {i+1}/{retries}): {e}")
+                time.sleep(delay)
+                continue
+            # S'assurer que le schéma est initialisé maintenant que la DB est accessible
+            try:
+                db_manager.init_database()
+            except Exception as e:
+                logging.getLogger(__name__).warning(f"Init schéma ignorée/échouée: {e}")
+            res = seed_defaults()
+            if res.get("success"):
+                logging.getLogger(__name__).info(f"Seed défauts OK: {res}")
+            else:
+                logging.getLogger(__name__).warning(f"Seed défauts échec: {res}")
+            break
+        except Exception as e:
+            logging.getLogger(__name__).warning(f"Seed défauts tentative {i+1}/{retries} échouée: {e}")
+            time.sleep(delay)
 
 # Root simple (utile pour tests manuels, renvoie statut de base)
 @app.get("/")
@@ -67,7 +106,6 @@ app.add_middleware(
 
 # Inclusion des routers API
 app.include_router(config_router)
-app.include_router(guard_types_router)
 
 from fastapi import Response  # (plus d'endpoint /logs — historique via /usage/history)
 

@@ -7,14 +7,20 @@ from ..utils.dynamic_config_loader import dynamic_config_loader
 
 class GuardService:
     def __init__(self, key: str = "ia_guards_secret_2025"):
+        # Services légers toujours prêts
         self.token_manager = TokenManager(key)
         self.llm_service = LLMService()
-        self.pii_detector = PIIDetectorFrench()  # Nouveau détecteur français
-        self.config_loader = dynamic_config_loader  # Gestionnaire de configuration dynamique
+        # Lazy init du détecteur (déclenchera le téléchargement des modèles au premier /process)
+        self.pii_detector = None  # type: ignore
+        # Accès au chargeur de configuration dynamique (DB)
+        self.config_loader = dynamic_config_loader
 
     def process(self, text: str, guard_type: str) -> dict:
         """Traite le texte pour détecter, masquer, envoyer au LLM et restaurer les entités sensibles."""
         logging.info(f"Début du traitement du texte (guard_type={guard_type})")
+        # Initialize detector on first use (may download spaCy model)
+        if self.pii_detector is None:
+            self.pii_detector = PIIDetectorFrench()
         all_entities = self.pii_detector.detect(text, guard_type)  # 🆕 Passer guard_type
         logging.info(f"Entités détectées : {[(e['text'], e['type']) for e in all_entities]}")
 

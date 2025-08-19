@@ -5,6 +5,7 @@ from ..utils.dynamic_config_loader import dynamic_config_loader
 from ..database.db_manager import db_manager
 from ..utils.entity_mapping import canonicalize_entity, list_supported_entities
 import logging
+from ..init_seed_defaults import seed_defaults
 
 logger = logging.getLogger(__name__)
 
@@ -118,9 +119,6 @@ async def create_guard_type(guard_type: GuardTypeCreate):
     except Exception as e:
         logger.error(f"Erreur création guard type: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-    except Exception as e:
-        logger.error(f"Erreur création guard type: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
 
 @config_router.put("/guard-types/{guard_name}", summary="Modifier un type de protection")
 async def update_guard_type(guard_name: str, guard_type: GuardTypeUpdate):
@@ -167,9 +165,22 @@ async def delete_guard_type(guard_id: int):
     except Exception as e:
         logger.error(f"Erreur suppression guard type: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# Optionnel: suppression par nom (pratique pour nettoyer 'T1')
+@config_router.delete("/guard-types/by-name/{guard_name}", summary="Supprimer un type par nom")
+async def delete_guard_type_by_name(guard_name: str):
+    try:
+        gt = db_manager.get_guard_type(guard_name)
+        if not gt:
+            raise HTTPException(status_code=404, detail="Type non trouvé")
+        success = db_manager.delete_guard_type(gt['id'])
+        if success:
+            return {"success": True, "message": f"Type '{guard_name}' supprimé"}
+        raise HTTPException(status_code=400, detail="Suppression échouée")
+    except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erreur suppression guard type: {e}")
+        logger.error(f"Erreur suppression par nom: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # =================== ENDPOINTS PII FIELDS ===================
@@ -341,9 +352,7 @@ async def create_pii_field_alt(field: PIIFieldCreateAlt):
             'type': field.detection_type,
             'example': field.example_value,
             'pattern': field.regex_pattern,
-            'ner_entity_type': field.ner_entity_type,
-            'confidence_threshold': field.confidence_threshold,
-            'priority': field.priority
+            'ner_entity_type': field.ner_entity_type
         }
 
         result = dynamic_config_loader.create_pii_field(field.guard_type, field_data)
@@ -422,19 +431,7 @@ async def get_supported_ner_entities(include_synonyms: bool = False):
         logger.error(f"Erreur récupération entités supportées: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@config_router.get("/regex-patterns", summary="Patterns regex disponibles")
-async def get_regex_patterns():
-    """Récupère tous les patterns regex disponibles"""
-    try:
-        patterns = db_manager.get_regex_patterns()
-        return {
-            "success": True,
-            "patterns": patterns,
-            "count": len(patterns)
-        }
-    except Exception as e:
-        logger.error(f"Erreur récupération patterns: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+# (duplicate route removed)
 
 @config_router.post("/reload", summary="Recharger la configuration")
 async def reload_configuration():
@@ -461,4 +458,19 @@ async def get_detection_config(guard_type: str):
         }
     except Exception as e:
         logger.error(f"Erreur récupération config détection: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# =================== ADMIN: SEED PAR DÉFAUT ===================
+
+@config_router.post("/seed-defaults", summary="Créer les types/champs par défaut si absents")
+async def seed_defaults_api():
+    try:
+        res = seed_defaults()
+        if not res.get('success'):
+            raise HTTPException(status_code=500, detail=res.get('error','seed échoué'))
+        return {"success": True, "data": res}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur seed defaults: {e}")
         raise HTTPException(status_code=500, detail=str(e))

@@ -19,8 +19,10 @@ class DatabaseManager:
     def __init__(self, db_path: str = None):
         # Déterminer moteur (sqlite par défaut)
         self.engine = os.getenv("DB_ENGINE", "sqlite").lower()
-        #sqlite
 
+        # Préparer chemin SQLite par défaut, même si MySQL ciblé (pour fallback)
+        current_dir = Path(__file__).parent
+        self.db_path = Path(db_path) if db_path else (current_dir / "ai_guards.db")
 
         if self.engine == 'mysql':
             # Paramètres MySQL via env (valeurs par défaut raisonnables)
@@ -32,13 +34,6 @@ class DatabaseManager:
             if pymysql is None:
                 logger.error("PyMySQL non installé – bascule sur SQLite")
                 self.engine = 'sqlite'
-        
-        if self.engine == 'sqlite':
-            if db_path is None:
-                current_dir = Path(__file__).parent
-                self.db_path = current_dir / "ai_guards.db"
-            else:
-                self.db_path = Path(db_path)
 
         self.init_database()
 
@@ -208,19 +203,31 @@ class DatabaseManager:
             logger.error(f"Migration colonnes usage_history SQLite échouée: {e}")
     
     def get_connection(self):
-        """Retourne une connexion (sqlite ou mysql)."""
+        """Retourne une connexion (sqlite ou mysql). Bascule sur SQLite si MySQL indisponible."""
         self.ensure_initialized()
         if self.engine == 'mysql':
-            return pymysql.connect(
-                host=self.mysql_host,
-                port=self.mysql_port,
-                user=self.mysql_user,
-                password=self.mysql_password,
-                database=self.mysql_name,
-                charset='utf8mb4',
-                cursorclass=DictCursor,
-                autocommit=False
-            )
+            try:
+                return pymysql.connect(
+                    host=self.mysql_host,
+                    port=self.mysql_port,
+                    user=self.mysql_user,
+                    password=self.mysql_password,
+                    database=self.mysql_name,
+                    charset='utf8mb4',
+                    cursorclass=DictCursor,
+                    autocommit=True
+                )
+            except Exception as e:
+                # Fallback contrôlé par variable d'environnement (désactivé par défaut)
+                allow_fallback = os.getenv('DB_SQLITE_FALLBACK', 'false').lower() in ('1','true','yes')
+                logger.error(f"Connexion MySQL échouée ({e}) – fallbackSQLite={allow_fallback}")
+                if not allow_fallback:
+                    # Ne pas changer de moteur, laisser l'appelant réessayer
+                    raise
+                # Sinon, activer la bascule vers SQLite
+                self.engine = 'sqlite'
+                # S'assurer que la base SQLite est prête
+                self.init_database()
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         return conn
@@ -231,7 +238,7 @@ class DatabaseManager:
         """Récupère tous les types de protection"""
         with self.get_connection() as conn:
             cursor = self._query(conn, """
-                SELECT id, name, display_name, description, icon, color, is_active
+                SELECT id, name, display_name, description, icon, color, is_active, created_at, updated_at
                 FROM guard_types 
                 WHERE is_active = 1
                 ORDER BY name
@@ -253,11 +260,28 @@ class DatabaseManager:
                          icon: str = "🛡️", color: str = "#666666") -> int:
         """Crée un nouveau type de protection"""
         with self.get_connection() as conn:
+            # Idempotent: retourner l'ID si déjà existant
+            try:
+                cur_check = self._query(conn, "SELECT id FROM guard_types WHERE name = ? AND is_active = 1", (name,))
+                row = cur_check.fetchone()
+                if row:
+                    return (row['id'] if isinstance(row, dict) else row[0])
+            except Exception as e:
+                logger.debug(f"create_guard_type: check exist failed (continuing to insert): {e}")
+
+            logger.debug(f"create_guard_type: engine={self.engine} inserting name={name}")
             cursor = self._query(conn, """
                 INSERT INTO guard_types (name, display_name, description, icon, color)
                 VALUES (?, ?, ?, ?, ?)
             """, (name, display_name, description, icon, color))
-            return cursor.lastrowid
+            # Commit explicit pour MySQL si autocommit désactivé, no-op sinon
+            try:
+                conn.commit()
+            except Exception as e:
+                logger.debug(f"create_guard_type: commit hint (ignored) {e}")
+            rid = cursor.lastrowid
+            logger.debug(f"create_guard_type: inserted id={rid}")
+            return rid
     
     def update_guard_type(self, guard_id: int, **kwargs) -> bool:
         """Met à jour un type de protection"""
@@ -274,6 +298,10 @@ class DatabaseManager:
                 SET {set_clause}, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             """, tuple(values))
+            try:
+                conn.commit()
+            except Exception:
+                pass
             return cursor.rowcount > 0
     
     def delete_guard_type(self, guard_id: int) -> bool:
@@ -284,6 +312,10 @@ class DatabaseManager:
                 SET is_active = 0, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             """, (guard_id,))
+            try:
+                conn.commit()
+            except Exception:
+                pass
             return cursor.rowcount > 0
 
     # =================== GESTION DES CHAMPS PII ===================
@@ -335,6 +367,14 @@ class DatabaseManager:
             raise ValueError(f"Type de protection '{guard_type_name}' non trouvé")
         
         with self.get_connection() as conn:
+            # Idempotent: si le champ existe déjà sur ce guard_type, retourner son ID
+            try:
+                cur_check = self._query(conn, "SELECT id FROM pii_fields WHERE guard_type_id = ? AND field_name = ? AND is_active = 1", (guard_type['id'], field_name))
+                row = cur_check.fetchone()
+                if row:
+                    return (row['id'] if isinstance(row, dict) else row[0])
+            except Exception as e:
+                logger.debug(f"create_pii_field: check exist failed (continuing to insert): {e}")
             # Insérer sans colonnes confidence_threshold / priority (laisser valeurs par défaut si elles existent)
             try:
                 cursor = self._query(conn, """
@@ -353,6 +393,10 @@ class DatabaseManager:
                     VALUES (?, ?, ?, ?, ?, ?, ?, 0.7, 1)
                 """, (guard_type['id'], field_name, display_name, detection_type,
                       example_value, regex_pattern, ner_entity_type))
+            try:
+                conn.commit()
+            except Exception as e:
+                logger.debug(f"create_pii_field: commit hint (ignored) {e}")
             return cursor.lastrowid
     
     def update_pii_field(self, field_id: int, **kwargs) -> bool:
@@ -369,6 +413,10 @@ class DatabaseManager:
                 SET {set_clause}, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             """, tuple(values))
+            try:
+                conn.commit()
+            except Exception:
+                pass
             return cursor.rowcount > 0
     
     def delete_pii_field(self, field_id: int) -> bool:
@@ -379,6 +427,10 @@ class DatabaseManager:
                 SET is_active = 0, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             """, (field_id,))
+            try:
+                conn.commit()
+            except Exception:
+                pass
             return cursor.rowcount > 0
 
     # =================== GESTION DES PATTERNS REGEX ===================
@@ -438,6 +490,10 @@ class DatabaseManager:
                 (name, display_name, pattern, description, test_examples, flags)
                 VALUES (?, ?, ?, ?, ?, ?)
             """, (name, display_name, pattern, description, test_examples_json, flags))
+            try:
+                conn.commit()
+            except Exception:
+                pass
             return cursor.lastrowid
     
     def update_regex_pattern(self, pattern_id: int, **kwargs) -> bool:
@@ -458,6 +514,10 @@ class DatabaseManager:
                 SET {set_clause}, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             """, tuple(values))
+            try:
+                conn.commit()
+            except Exception:
+                pass
             return cursor.rowcount > 0
     
     def delete_regex_pattern(self, pattern_id: int) -> bool:
@@ -468,6 +528,10 @@ class DatabaseManager:
                 SET is_active = 0, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             """, (pattern_id,))
+            try:
+                conn.commit()
+            except Exception:
+                pass
             return cursor.rowcount > 0
 
     # =================== GESTION DES TYPES NER ===================
@@ -511,6 +575,10 @@ class DatabaseManager:
                                VALUES (?, ?, ?, ?, ?, ?)""",
                         (guard_type, masked_text, prompt_tokens, completion_tokens, total_tokens, masked_token_count)
                     )
+                try:
+                    conn.commit()
+                except Exception:
+                    pass
                 return cursor.lastrowid
         except Exception as e:
             # Tentative migration à chaud puis retry une fois

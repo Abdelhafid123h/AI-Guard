@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  ai-guards-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        INSTALL_ML: "false"
+    container_name: ai-guards-backend
+    env_file:
+      - .env
+    environment:
+      PYTHONPATH: /app
+      DB_ENGINE: mysql
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_USER: ai_guards
+      DB_PASSWORD: ai_guards_pwd
+      DB_NAME: ai_guards
+      OPENAI_MODEL: gpt-3.5-turbo
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ai_guards_data:/app/app/database
+      - ai_guards_logs:/app/app/logs
+    depends_on:
+      - mysql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - ai-guards-network
+
+  ai-guards-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ai-guards-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      REACT_APP_API_URL: http://localhost:8000
+      CHOKIDAR_USEPOLLING: "true"
+    depends_on:
+      - ai-guards-backend
+    restart: unless-stopped
+    networks:
+      - ai-guards-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: ai-guards-mysql
+    command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpwd
+      MYSQL_DATABASE: ai_guards
+      MYSQL_USER: ai_guards
+      MYSQL_PASSWORD: ai_guards_pwd
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - ai-guards-network
+
+volumes:
+  ai_guards_data:
+  ai_guards_logs:
+  mysql_data:
+
+networks:
+  ai-guards-network:
+    driver: bridge
