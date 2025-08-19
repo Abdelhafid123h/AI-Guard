@@ -4,7 +4,7 @@ import axios from 'axios';
 const PIIFieldManager = ({ guardType, onClose }) => {
   const [fields, setFields] = useState([]);
   const [regexPatterns, setRegexPatterns] = useState([]);
-  const [nerEntityTypes, setNerEntityTypes] = useState([]);
+  const [nerEntityTypes, setNerEntityTypes] = useState([]); // canonical entities (e.g., PERSON, EMAIL_ADDRESS)
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -24,7 +24,7 @@ const PIIFieldManager = ({ guardType, onClose }) => {
   useEffect(() => {
     loadFields();
     loadRegexPatterns();
-    loadNerEntityTypes();
+  loadNerEntityTypes();
   }, [guardType]);
 
   const loadFields = async () => {
@@ -53,10 +53,13 @@ const PIIFieldManager = ({ guardType, onClose }) => {
 
   const loadNerEntityTypes = async () => {
     try {
-      const response = await axios.get(`${API_BASE}/ner-entity-types`);
-      setNerEntityTypes(response.data.entity_types || []);
+      // Use canonical entities to avoid duplicates per model
+      const response = await axios.get(`${API_BASE}/ner-supported`);
+      // When include_synonyms=false (default), backend returns an array of canonical strings
+      const list = Array.isArray(response.data.data) ? response.data.data : (response.data.data?.canonical || []);
+      setNerEntityTypes(list);
     } catch (err) {
-      console.error('Erreur chargement entités NER:', err);
+      console.error('Erreur chargement entités NER (canoniques):', err);
     }
   };
 
@@ -301,9 +304,7 @@ const PIIFieldManager = ({ guardType, onClose }) => {
                 >
                   <option value="">-- Sélectionner un type d'entité --</option>
                   {nerEntityTypes.map(entity => (
-                    <option key={`${entity.model_name}-${entity.entity_type}`} value={entity.entity_type}>
-                      {entity.display_name} ({entity.model_name}: {entity.entity_type})
-                    </option>
+                    <option key={entity} value={entity}>{entity}</option>
                   ))}
                 </select>
               </div>

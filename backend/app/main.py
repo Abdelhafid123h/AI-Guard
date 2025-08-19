@@ -124,6 +124,29 @@ def process(request: ProcessRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+class MaskOnlyRequest(BaseModel):
+    text: str
+    guard_type: str
+
+@app.post("/mask-only")
+def mask_only(request: MaskOnlyRequest):
+    try:
+        return guard_service.mask_only(request.text, request.guard_type)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+class FinalizeRequest(BaseModel):
+    masked: str
+    tokens: Dict[str, str]
+    guard_type: str
+
+@app.post("/finalize")
+def finalize(request: FinalizeRequest):
+    try:
+        return guard_service.finalize_with_mask(request.masked, request.tokens, request.guard_type)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/usage/history")
 def list_usage(limit: int = 100):
     try:

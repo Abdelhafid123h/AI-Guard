@@ -13,25 +13,19 @@ services:
       DB_ENGINE: mysql
       DB_HOST: mysql
       DB_PORT: "3306"
-      DB_USER: ai_guards
-      DB_PASSWORD: ai_guards_pwd
-      DB_NAME: ai_guards
+    DB_USER: ${MYSQL_USER}
+    DB_PASSWORD: ${MYSQL_PASSWORD}
+    DB_NAME: ${MYSQL_DATABASE}
+      DB_SQLITE_FALLBACK: "false"
       OPENAI_MODEL: gpt-3.5-turbo
       OPENAI_API_KEY: ${OPENAI_API_KEY}
     ports:
       - "8000:8000"
     volumes:
-      - ai_guards_data:/app/app/database
       - ai_guards_logs:/app/app/logs
     depends_on:
       - mysql
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
     networks:
       - ai-guards-network
 
@@ -62,7 +56,10 @@ services:
       MYSQL_ROOT_PASSWORD: rootpwd
       MYSQL_DATABASE: ai_guards
       MYSQL_USER: ai_guards
-      MYSQL_PASSWORD: ai_guards_pwd
+    MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    MYSQL_DATABASE: ${MYSQL_DATABASE}
+    MYSQL_USER: ${MYSQL_USER}
+    MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3307:3306"
     volumes:
@@ -78,7 +75,6 @@ services:
       - ai-guards-network
 
 volumes:
-  ai_guards_data:
   ai_guards_logs:
   mysql_data:
 

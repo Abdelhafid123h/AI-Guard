@@ -2,6 +2,7 @@ import logging
 from ..services.pii_detector_french import PIIDetectorFrench
 from ..utils.token_manager import TokenManager
 from ..services.llm_service import LLMService
+from typing import Dict, Tuple
 from ..database.db_manager import db_manager
 from ..utils.dynamic_config_loader import dynamic_config_loader
 
@@ -74,7 +75,7 @@ class GuardService:
             "client_version": getattr(self.llm_service, 'client_version', None)
         }
 
-    def generate_tokens(self, text: str, entities: list) -> tuple[str, dict]:
+    def generate_tokens(self, text: str, entities: list) -> Tuple[str, Dict[str, str]]:
         """Génère des tokens en évitant les corruptions dues aux décalages d'index.
 
         Stratégie:
@@ -112,7 +113,7 @@ class GuardService:
         # Ordonner sélection pour reconstruction
         selected.sort(key=lambda e: e['start'])
 
-        tokens = {}
+        tokens: Dict[str, str] = {}
         out_parts = []
         cursor = 0
         for ent in selected:
@@ -133,3 +134,57 @@ class GuardService:
         for token, original in tokens.items():
             text = text.replace(token, original)
         return text
+
+    # --- Nouveaux helpers pour le flux en 2 étapes ---
+    def mask_only(self, text: str, guard_type: str) -> Dict:
+        """Retourne uniquement le texte masqué et les tokens, sans appeler le LLM."""
+        # Initialize detector on first use
+        if self.pii_detector is None:
+            self.pii_detector = PIIDetectorFrench()
+        all_entities = self.pii_detector.detect(text, guard_type)
+
+        allowed_types = self.config_loader.get_guard_types(guard_type)
+        entities = [e for e in all_entities if e['type'] in allowed_types]
+        masked_text, tokens = self.generate_tokens(text, entities)
+        return {
+            "original": text,
+            "masked": masked_text,
+            "tokens": tokens,
+            "masked_token_count": len(tokens)
+        }
+
+    def finalize_with_mask(self, masked_text: str, tokens: Dict[str, str], guard_type: str) -> Dict:
+        """Envoie le texte masqué au LLM, puis démasque la réponse à l'aide des tokens."""
+        try:
+            llm_payload = self.llm_service.send_to_llm(masked_text)
+            llm_content = llm_payload.get('content') if isinstance(llm_payload, dict) else str(llm_payload)
+            prompt_tokens = llm_payload.get('prompt_tokens', 0) if isinstance(llm_payload, dict) else 0
+            completion_tokens = llm_payload.get('completion_tokens', 0) if isinstance(llm_payload, dict) else 0
+        except Exception as e:
+            logging.error(f"Erreur lors de l'appel au LLM (finalize): {e}")
+            llm_content = "[Erreur LLM]"
+            prompt_tokens = completion_tokens = 0
+
+        # Historique
+        try:
+            masked_token_count = len(tokens)
+            llm_mode = 'enabled' if (prompt_tokens + completion_tokens) > 0 else 'disabled'
+            db_manager.add_usage_history(
+                guard_type, masked_text, prompt_tokens, completion_tokens, masked_token_count,
+                model=getattr(self.llm_service, 'model', None), llm_mode=llm_mode
+            )
+        except Exception as e:
+            logging.warning(f"Impossible d'enregistrer l'historique (finalize): {e}")
+
+        unmasked_response = self.unmask(llm_content, tokens)
+        return {
+            "masked": masked_text,
+            "llm_response": llm_content,
+            "unmasked": unmasked_response,
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
+            "total_tokens": prompt_tokens + completion_tokens,
+            "masked_token_count": len(tokens),
+            "model": getattr(self.llm_service, 'model', None),
+            "client_version": getattr(self.llm_service, 'client_version', None)
+        }

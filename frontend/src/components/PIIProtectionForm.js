@@ -129,8 +129,6 @@ const PIIProtectionForm = ({ onSubmit, loading }) => {
           required
         >
           <option value="openai">OpenAI GPT</option>
-          <option value="claude">Claude (Anthropic)</option>
-          <option value="local">Modèle Local</option>
         </select>
       </div>
 

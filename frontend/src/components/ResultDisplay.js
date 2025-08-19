@@ -3,11 +3,16 @@ import React, { useState } from 'react';
 const ResultDisplay = ({ result }) => {
   const [activeTab, setActiveTab] = useState('original');
 
+  const original = typeof result?.original === 'string' ? result.original : '';
+  const masked = typeof result?.masked === 'string' ? result.masked : '';
+  const llmResponse = typeof result?.llm_response === 'string' ? result.llm_response : '';
+  const unmasked = typeof result?.unmasked === 'string' ? result.unmasked : '';
+
   const tabs = [
-    { id: 'original', label: '📄 Texte Original', content: result.original },
-    { id: 'masked', label: '🔒 Texte Masqué', content: result.masked },
-    { id: 'llm_response', label: '🤖 Réponse IA', content: result.llm_response },
-    { id: 'unmasked', label: '🔓 Réponse Démasquée', content: result.unmasked }
+    { id: 'original', label: '📄 Texte Original', content: original },
+    { id: 'masked', label: '🔒 Texte Masqué', content: masked },
+    { id: 'llm_response', label: '🤖 Réponse IA', content: llmResponse },
+    { id: 'unmasked', label: '🔓 Réponse Démasquée', content: unmasked }
   ];
 
   return (
@@ -80,7 +85,7 @@ const ResultDisplay = ({ result }) => {
         }}>
           <h4 style={{ color: '#333', marginBottom: '10px' }}>📝 Longueur Originale</h4>
           <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#667eea' }}>
-            {result.original.length} caractères
+            {original.length} caractères
           </span>
         </div>
 
@@ -92,7 +97,7 @@ const ResultDisplay = ({ result }) => {
         }}>
           <h4 style={{ color: '#333', marginBottom: '10px' }}>🔒 Entités Masquées</h4>
           <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#e74c3c' }}>
-            {(result.masked.match(/<[^>]+>/g) || []).length}
+            {(masked.match(/<[^>]+>/g) || []).length}
           </span>
         </div>
 
@@ -104,7 +109,7 @@ const ResultDisplay = ({ result }) => {
         }}>
           <h4 style={{ color: '#333', marginBottom: '10px' }}>🤖 Réponse IA</h4>
           <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#27ae60' }}>
-            {result.llm_response.length} caractères
+            {llmResponse.length} caractères
           </span>
         </div>
       </div>

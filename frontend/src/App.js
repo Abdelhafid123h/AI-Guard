@@ -5,6 +5,7 @@ import ResultDisplay from './components/ResultDisplay';
 import GuardTypeInfo from './components/GuardTypeInfo';
 import GuardTypeManager from './components/GuardTypeManager';
 import HistoryPage from './components/HistoryPage';
+import MaskedReview from './components/MaskedReview';
 import './App.css';
 
 function App() {
@@ -12,22 +13,47 @@ function App() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('protection'); // 'protection', 'management', 'history'
+  const [review, setReview] = useState(null); // { original, masked, tokens, guardType }
 
   const handleSubmit = async (formData) => {
+    // Étape 1: obtenir le texte masqué sans appeler le LLM
     setLoading(true);
     setError(null);
     setResult(null);
-
+    setReview(null);
     try {
-      const response = await axios.post('http://127.0.0.1:8000/process', {
+      const resp = await axios.post('http://127.0.0.1:8000/mask-only', {
         text: formData.text,
-        guard_type: formData.guardType,
-        llm_provider: formData.llmProvider
+        guard_type: formData.guardType
       });
-
-      setResult(response.data);
+      setReview({
+        original: resp.data.original,
+        masked: resp.data.masked,
+        tokens: resp.data.tokens,
+        guardType: formData.guardType
+      });
     } catch (err) {
-      setError(err.response?.data?.detail || 'Erreur lors du traitement de la requête');
+      setError(err.response?.data?.detail || 'Erreur lors du masquage');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFinalize = async (masked, tokens, guardType) => {
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    try {
+  const resp = await axios.post('http://127.0.0.1:8000/finalize', {
+        masked,
+        tokens,
+        guard_type: guardType
+      });
+  // Preserve original text if backend doesn't echo it in finalize
+  setResult({ original: review?.original || '', ...resp.data });
+      setReview(null);
+    } catch (err) {
+      setError(err.response?.data?.detail || "Erreur lors de l'envoi au LLM");
     } finally {
       setLoading(false);
     }
@@ -40,7 +66,19 @@ function App() {
           <>
             <GuardTypeInfo />
             <div className="card">
-              <PIIProtectionForm onSubmit={handleSubmit} loading={loading} />
+              {!review ? (
+                <PIIProtectionForm onSubmit={handleSubmit} loading={loading} />
+              ) : (
+                <MaskedReview
+                  original={review.original}
+                  masked={review.masked}
+                  tokens={review.tokens}
+                  guardType={review.guardType}
+                  loading={loading}
+                  onFinalize={handleFinalize}
+                  onCancel={() => setReview(null)}
+                />
+              )}
             </div>
             {loading && (
               <div className="card">

@@ -22,7 +22,14 @@ class DatabaseManager:
 
         # Préparer chemin SQLite par défaut, même si MySQL ciblé (pour fallback)
         current_dir = Path(__file__).parent
-        self.db_path = Path(db_path) if db_path else (current_dir / "ai_guards.db")
+        # Allow override via env DB_SQLITE_PATH (e.g., to a mounted volume)
+        sqlite_path_env = os.getenv("DB_SQLITE_PATH")
+        if db_path:
+            self.db_path = Path(db_path)
+        elif sqlite_path_env:
+            self.db_path = Path(sqlite_path_env)
+        else:
+            self.db_path = current_dir / "ai_guards.db"
 
         if self.engine == 'mysql':
             # Paramètres MySQL via env (valeurs par défaut raisonnables)
@@ -269,6 +276,37 @@ class DatabaseManager:
             except Exception as e:
                 logger.debug(f"create_guard_type: check exist failed (continuing to insert): {e}")
 
+            # If a soft-deleted record exists with the same name, reactivate it instead of inserting (avoids UNIQUE(name) conflict)
+            try:
+                cur_any = self._query(conn, "SELECT id, is_active FROM guard_types WHERE name = ? LIMIT 1", (name,))
+                row_any = cur_any.fetchone()
+                if row_any:
+                    rid = (row_any['id'] if isinstance(row_any, dict) else row_any[0])
+                    # Robust truthiness: handle int 0/1 or string '0'/'1'
+                    raw_flag = (row_any['is_active'] if isinstance(row_any, dict) else row_any[1])
+                    try:
+                        active_flag = int(raw_flag)
+                    except Exception:
+                        active_flag = 1 if bool(raw_flag) else 0
+                    if active_flag == 0:
+                        self._query(conn, """
+                            UPDATE guard_types
+                            SET is_active = 1,
+                                display_name = ?,
+                                description = ?,
+                                icon = ?,
+                                color = ?,
+                                updated_at = CURRENT_TIMESTAMP
+                            WHERE id = ?
+                        """, (display_name, description, icon, color, rid))
+                        try:
+                            conn.commit()
+                        except Exception:
+                            pass
+                    return rid
+            except Exception as e:
+                logger.debug(f"create_guard_type: reactivate-if-deleted failed (will try insert): {e}")
+
             logger.debug(f"create_guard_type: engine={self.engine} inserting name={name}")
             cursor = self._query(conn, """
                 INSERT INTO guard_types (name, display_name, description, icon, color)
@@ -375,6 +413,37 @@ class DatabaseManager:
                     return (row['id'] if isinstance(row, dict) else row[0])
             except Exception as e:
                 logger.debug(f"create_pii_field: check exist failed (continuing to insert): {e}")
+
+            # Reactivate soft-deleted field with same name for this guard_type to avoid UNIQUE constraint
+            try:
+                cur_any = self._query(conn, "SELECT id, is_active FROM pii_fields WHERE guard_type_id = ? AND field_name = ? LIMIT 1", (guard_type['id'], field_name))
+                row_any = cur_any.fetchone()
+                if row_any:
+                    rid = (row_any['id'] if isinstance(row_any, dict) else row_any[0])
+                    raw_flag = (row_any['is_active'] if isinstance(row_any, dict) else row_any[1])
+                    try:
+                        active_flag = int(raw_flag)
+                    except Exception:
+                        active_flag = 1 if bool(raw_flag) else 0
+                    if active_flag == 0:
+                        self._query(conn, """
+                            UPDATE pii_fields
+                            SET is_active = 1,
+                                display_name = ?,
+                                detection_type = ?,
+                                example_value = ?,
+                                regex_pattern = ?,
+                                ner_entity_type = ?,
+                                updated_at = CURRENT_TIMESTAMP
+                            WHERE id = ?
+                        """, (display_name, detection_type, example_value, regex_pattern, ner_entity_type, rid))
+                        try:
+                            conn.commit()
+                        except Exception:
+                            pass
+                    return rid
+            except Exception as e:
+                logger.debug(f"create_pii_field: reactivate-if-deleted failed (will try insert): {e}")
             # Insérer sans colonnes confidence_threshold / priority (laisser valeurs par défaut si elles existent)
             try:
                 cursor = self._query(conn, """
@@ -485,6 +554,46 @@ class DatabaseManager:
         test_examples_json = json.dumps(test_examples or [])
         
         with self.get_connection() as conn:
+            # If an active pattern exists, return its id (idempotent)
+            try:
+                cur_check = self._query(conn, "SELECT id FROM regex_patterns WHERE name = ? AND is_active = 1", (name,))
+                row = cur_check.fetchone()
+                if row:
+                    return (row['id'] if isinstance(row, dict) else row[0])
+            except Exception as e:
+                logger.debug(f"create_regex_pattern: check exist failed (continuing): {e}")
+
+            # If a soft-deleted pattern with same name exists, reactivate and update it
+            try:
+                cur_any = self._query(conn, "SELECT id, is_active FROM regex_patterns WHERE name = ? LIMIT 1", (name,))
+                row_any = cur_any.fetchone()
+                if row_any:
+                    rid = (row_any['id'] if isinstance(row_any, dict) else row_any[0])
+                    raw_flag = (row_any['is_active'] if isinstance(row_any, dict) else row_any[1])
+                    try:
+                        active_flag = int(raw_flag)
+                    except Exception:
+                        active_flag = 1 if bool(raw_flag) else 0
+                    if active_flag == 0:
+                        self._query(conn, """
+                            UPDATE regex_patterns
+                            SET is_active = 1,
+                                display_name = ?,
+                                pattern = ?,
+                                description = ?,
+                                test_examples = ?,
+                                flags = ?,
+                                updated_at = CURRENT_TIMESTAMP
+                            WHERE id = ?
+                        """, (display_name, pattern, description, test_examples_json, flags, rid))
+                        try:
+                            conn.commit()
+                        except Exception:
+                            pass
+                    return rid
+            except Exception as e:
+                logger.debug(f"create_regex_pattern: reactivate-if-deleted failed (will try insert): {e}")
+
             cursor = self._query(conn, """
                 INSERT INTO regex_patterns 
                 (name, display_name, pattern, description, test_examples, flags)
