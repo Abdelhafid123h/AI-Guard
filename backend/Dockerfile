@@ -43,8 +43,13 @@ RUN mkdir -p /app/app/database
 
 EXPOSE 8000
 
+# Ensure correct line endings and executable bit for entrypoint
+# Pre-install spaCy models for Presidio (fr/en) to improve NER recall
+RUN python -m spacy download fr_core_news_sm && \
+        python -m spacy download en_core_web_sm
+
 COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+RUN sed -i 's/\r$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 

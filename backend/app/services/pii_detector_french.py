@@ -30,6 +30,8 @@ class PIIDetectorFrench:
         print(f"📋 Modèles disponibles : {', '.join(self.models.get_available_models())}")
         print("🔧 Configuration dynamique activée")
         print(f"🔄 Mapping d'entités configuré: {len(self.entity_mapping)} entrées (canoniques + synonymes)")
+        # Mode rappel élevé pour PERSON (peut augmenter faux positifs) activable par env
+        self.high_recall_person = os.getenv('PII_HIGH_RECALL_PERSON', '0').lower() in ('1','true','yes')
 
         # Initialisation de Presidio (multi-lang si possible)
         self.presidio_analyzer = None
@@ -113,7 +115,7 @@ class PIIDetectorFrench:
 
         # Validation
         validated = self._validate_entities(entities)
-        filtered = filter_false_positives(validated)
+        filtered = filter_false_positives(validated) if not self.high_recall_person else validated
 
         regex_part = [e for e in filtered if e.get('source') == 'regex_db']
         other_part = [e for e in filtered if e.get('source') != 'regex_db']

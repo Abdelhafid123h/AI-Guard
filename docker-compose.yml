@@ -13,16 +13,15 @@ services:
       DB_ENGINE: mysql
       DB_HOST: mysql
       DB_PORT: "3306"
-    DB_USER: ${MYSQL_USER}
-    DB_PASSWORD: ${MYSQL_PASSWORD}
-    DB_NAME: ${MYSQL_DATABASE}
+      DB_USER: "${MYSQL_USER:-ai_guards}"
+      DB_PASSWORD: "${MYSQL_PASSWORD:-ai_guards_pwd}"
+      DB_NAME: "${MYSQL_DATABASE:-ai_guards}"
       DB_SQLITE_FALLBACK: "false"
-      OPENAI_MODEL: gpt-3.5-turbo
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: "gpt-3.5-turbo"
+      PII_PRESIDIO_LANGS: "fr,en"
+      PII_HIGH_RECALL_PERSON: "0"
     ports:
       - "8000:8000"
-    volumes:
-      - ai_guards_logs:/app/app/logs
     depends_on:
       - mysql
     restart: unless-stopped
@@ -40,7 +39,7 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      REACT_APP_API_URL: http://localhost:8000
+      REACT_APP_API_URL: "http://localhost:8000"
       CHOKIDAR_USEPOLLING: "true"
     depends_on:
       - ai-guards-backend
@@ -51,15 +50,15 @@ services:
   mysql:
     image: mysql:8.0
     container_name: ai-guards-mysql
-    command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    command:
+      - "mysqld"
+      - "--character-set-server=utf8mb4"
+      - "--collation-server=utf8mb4_unicode_ci"
     environment:
-      MYSQL_ROOT_PASSWORD: rootpwd
-      MYSQL_DATABASE: ai_guards
-      MYSQL_USER: ai_guards
-    MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-    MYSQL_DATABASE: ${MYSQL_DATABASE}
-    MYSQL_USER: ${MYSQL_USER}
-    MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:-rootpwd}"
+      MYSQL_DATABASE: "${MYSQL_DATABASE:-ai_guards}"
+      MYSQL_USER: "${MYSQL_USER:-ai_guards}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD:-ai_guards_pwd}"
     ports:
       - "3307:3306"
     volumes:
@@ -75,8 +74,7 @@ services:
       - ai-guards-network
 
 volumes:
-  ai_guards_logs:
-  mysql_data:
+  mysql_data: {}
 
 networks:
   ai-guards-network:

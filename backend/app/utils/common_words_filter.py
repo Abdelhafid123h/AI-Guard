@@ -85,10 +85,14 @@ def filter_false_positives(entities: list) -> list:
         if len(text) < 2:
             continue
             
-        # Ignorer les mots communs
+        # Ignorer les mots communs (sauf si c'est un nom propre plausible)
         if is_common_word(text):
-            print(f"🚫 Filtré mot commun: '{text}' ({entity_type})")
-            continue
+            # Autoriser prénoms très courts capitalisés (ex: "Lu")
+            if entity_type in {"name", "person", "PERSON"} and text[:1].isupper() and len(text) >= 2:
+                pass
+            else:
+                print(f"🚫 Filtré mot commun: '{text}' ({entity_type})")
+                continue
             
         # Ignorer les patterns suspects
         if is_suspicious_entity(text, entity_type):

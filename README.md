@@ -9,8 +9,8 @@ Setup (.env)
 - Copy the template and fill your values locally (do not commit .env):
 	- Windows PowerShell:
 		- Copy-Item .env.example .env
-	- Fill OPENAI_API_KEY and MySQL values if you want to override defaults.
-- .env is git-ignored; push only .env.example to share variable names with your team.
+	- Set at least OPENAI_API_KEY and (optionally) MySQL values.
+- .env is git-ignored; commit only .env.example.
 
 Quick start
 1) Prerequisites
@@ -19,11 +19,10 @@ Quick start
 	- OPENAI_API_KEY=sk-...
 	- MYSQL_ROOT_PASSWORD, MYSQL_PASSWORD (optional if you keep defaults in compose)
 
-2) Start the stack
-- From the repo root:
+2) Start the stack (from repo root)
 
-	docker-compose build --no-cache
-	docker-compose up -d
+	docker compose build --no-cache
+	docker compose up -d
 
 3) Open the app
 - Frontend: http://localhost:3000
@@ -43,13 +42,25 @@ Notes
 
 Troubleshooting
 - Backend “health: starting” for long:
-	- Check MySQL container is healthy (docker-compose ps)
-	- View backend logs: docker-compose logs ai-guards-backend --tail=200
+	- Check MySQL container is healthy (docker compose ps)
+	- View backend logs: docker compose logs ai-guards-backend --tail=200
+	- Stream logs live: docker compose logs -f ai-guards-backend
 	- Ensure the DB user exists and can connect from the backend:
 		- MySQL runs inside docker; user ai_guards/ai_guards_pwd on DB ai_guards is created by env.
 	- If you changed creds, update .env and docker-compose, then redeploy.
 - Frontend cannot reach backend:
 	- Backend must be on http://localhost:8000; React uses REACT_APP_API_URL env.
+
+LLM setup
+- Ensure OPENAI_API_KEY is set in .env before starting containers.
+- We don’t override OPENAI_API_KEY in compose; it’s taken from .env via env_file.
+- On startup you should see: "✅ OPENAI_API_KEY chargé" in backend logs if detected.
+
+NER accuracy (FR)
+- Presidio + spaCy models are installed (fr_core_news_sm, en_core_web_sm).
+- To improve recall for person names (risking more false positives), set PII_HIGH_RECALL_PERSON=1 in .env.
+- You can limit/analyse languages via PII_PRESIDIO_LANGS=fr,en.
+- Backend logs print detected model list and Presidio supported entities.
 
 Secrets & persistence
 - Never commit .env; it’s already in .gitignore. Commit .env.example only.
